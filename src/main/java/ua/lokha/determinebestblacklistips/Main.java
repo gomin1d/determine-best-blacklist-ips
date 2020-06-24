@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class Main {
-    @SuppressWarnings({"ResultOfMethodCallIgnored", "DuplicatedCode", "ConstantConditions"})
+    @SuppressWarnings({"ResultOfMethodCallIgnored", "DuplicatedCode", "ConstantConditions", "StringConcatenationInsideStringBufferAppend"})
     public static void main(String[] args) throws Exception {
         File goodFile = new File("good-ips.txt");
         File badFile = new File("bad-ips.txt");
@@ -30,14 +30,16 @@ public class Main {
             badFile.createNewFile();
         }
 
-        List<Integer> goodIps = readToIpList(goodFile);
-        System.out.println("goodNets " + goodIps.size());
-
         List<Integer> badIps = readToIpList(badFile);
         System.out.println("badNets " + badIps.size());
 
+        List<Integer> goodIps = readToIpList(goodFile);
+        goodIps.removeAll(badIps);
+        System.out.println("goodNets " + goodIps.size());
+
         for (File blacklistFile : blacklistsDir.listFiles(File::isFile)) {
-            System.out.println("load " + blacklistFile.getName());
+            StringBuilder log = new StringBuilder();
+            log.append("\n" + "load " + blacklistFile.getName());
             IntRangeSet blackNets = new IntRangeSet();
             IntHashSet blackIps = new IntHashSet(8, 0);
 
@@ -67,7 +69,7 @@ public class Main {
                 }
             }
 
-            System.out.println("check bad " + blacklistFile.getName());
+            log.append("\n" + "check bad " + blacklistFile.getName());
             int badCount = 0;
             for (Integer badIp : badIps) {
                 if (blackIps.contains(badIp) || blackNets.contains(badIp)) {
@@ -76,7 +78,7 @@ public class Main {
                 }
             }
 
-            System.out.println("check good " + blacklistFile.getName());
+            log.append("\n" + "check good " + blacklistFile.getName());
             int goodCount = 0;
             for (Integer goodIp : goodIps) {
                 if (blackIps.contains(goodIp) || blackNets.contains(goodIp)) {
@@ -85,9 +87,13 @@ public class Main {
                 }
             }
 
-            System.out.println("blacklist " + blacklistFile.getName() + ": \n" +
-                    "  badCount " + badCount + ": " + IntStream.of(badMatch.getValues()).mapToObj(Main::int2ip).collect(Collectors.joining(", ")) + "\n" +
-                    "  goodCount " + goodCount + ": " + IntStream.of(goodMatch.getValues()).mapToObj(Main::int2ip).collect(Collectors.joining(", ")));
+            double badPercent = ((double) badCount / badIps.size()) * 100;
+            log.append("\n" + "blacklist " + blacklistFile.getName() + ": \n" +
+                    "  badCount " + badCount + " (" + String.format("%.2f", badPercent) + "%): " + IntStream.of(badMatch.getValues()).mapToObj(Main::int2ip).collect(Collectors.joining(", ")) + "\n" +
+                    "  goodCount " + goodCount + " (" + String.format("%.2f", ((double)goodCount / goodIps.size()) * 100) + "%): " + IntStream.of(goodMatch.getValues()).mapToObj(Main::int2ip).collect(Collectors.joining(", ")));
+            if (badPercent > 70) {
+                System.out.println(log);
+            }
         }
     }
 
