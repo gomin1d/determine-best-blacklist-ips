@@ -38,25 +38,26 @@ public class Main {
             System.out.println("load " + blacklistFile.getName());
             IntRangeSet blackNets = new IntRangeSet();
             IntHashSet blackIps = new IntHashSet(8, 0);
-            LineIterator blackIterator = FileUtils.lineIterator(blacklistFile);
-            while (blackIterator.hasNext()) {
-                String blackIpString = blackIterator.next();
-                if (!isValid(blackIpString)) {
-                    continue;
-                }
-                int mask = 32;
-                if (blackIpString.contains("/")) {
-                    String[] data = blackIpString.split("/");
-                    mask = Integer.parseInt(data[1]);
-                    blackIpString = data[0];
-                }
-                int blackIp = ip2int(blackIpString);
-                if (mask == 32) {
-                    blackIps.add(blackIp);
-                } else {
-                    int down = blackIp & (0xffffffff << (32 - mask));
-                    int up = blackIp | (0xffffffff >>> (mask));
-                    blackNets.addRange(down, up);
+            try (LineIterator blackIterator = FileUtils.lineIterator(blacklistFile)) {
+                while (blackIterator.hasNext()) {
+                    String blackIpString = blackIterator.next();
+                    if (!isValid(blackIpString)) {
+                        continue;
+                    }
+                    int mask = 32;
+                    if (blackIpString.contains("/")) {
+                        String[] data = blackIpString.split("/");
+                        mask = Integer.parseInt(data[1]);
+                        blackIpString = data[0];
+                    }
+                    int blackIp = ip2int(blackIpString);
+                    if (mask == 32) {
+                        blackIps.add(blackIp);
+                    } else {
+                        int down = blackIp & (0xffffffff << (32 - mask));
+                        int up = blackIp | (0xffffffff >>> (mask));
+                        blackNets.addRange(down, up);
+                    }
                 }
             }
 
@@ -83,13 +84,14 @@ public class Main {
     @SneakyThrows
     public static List<Integer> readToIpList(File file) {
         List<Integer> ips = new ArrayList<>();
-        LineIterator iterator = FileUtils.lineIterator(file);
-        while (iterator.hasNext()) {
-            String ip = iterator.next();
-            if (!isValid(ip)) {
-                continue;
+        try (LineIterator iterator = FileUtils.lineIterator(file)) {
+            while (iterator.hasNext()) {
+                String ip = iterator.next();
+                if (!isValid(ip)) {
+                    continue;
+                }
+                ips.add(ip2int(ip));
             }
-            ips.add(ip2int(ip));
         }
         return ips;
     }
