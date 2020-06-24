@@ -10,6 +10,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class Main {
     @SuppressWarnings({"ResultOfMethodCallIgnored", "DuplicatedCode", "ConstantConditions"})
@@ -38,6 +40,10 @@ public class Main {
             System.out.println("load " + blacklistFile.getName());
             IntRangeSet blackNets = new IntRangeSet();
             IntHashSet blackIps = new IntHashSet(8, 0);
+
+            IntHashSet goodMatch = new IntHashSet(8, 0);
+            IntHashSet badMatch = new IntHashSet(8, 0);
+
             try (LineIterator blackIterator = FileUtils.lineIterator(blacklistFile)) {
                 while (blackIterator.hasNext()) {
                     String blackIpString = blackIterator.next();
@@ -66,6 +72,7 @@ public class Main {
             for (Integer badIp : badIps) {
                 if (blackIps.contains(badIp) || blackNets.contains(badIp)) {
                     badCount++;
+                    badMatch.add(badIp);
                 }
             }
 
@@ -74,10 +81,13 @@ public class Main {
             for (Integer goodIp : goodIps) {
                 if (blackIps.contains(goodIp) || blackNets.contains(goodIp)) {
                     goodCount++;
+                    goodMatch.add(goodIp);
                 }
             }
 
-            System.out.println("blacklist " + blacklistFile.getName() + ": badCount " + badCount + ", goodCount " + goodCount);
+            System.out.println("blacklist " + blacklistFile.getName() + ": \n" +
+                    "  badCount " + badCount + ": " + IntStream.of(badMatch.getValues()).mapToObj(Main::int2ip).collect(Collectors.joining(", ")) + "\n" +
+                    "  goodCount " + goodCount + ": " + IntStream.of(goodMatch.getValues()).mapToObj(Main::int2ip).collect(Collectors.joining(", ")));
         }
     }
 
