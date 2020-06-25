@@ -30,11 +30,6 @@
             <artifactId>commons-net</artifactId>
             <version>3.6</version>
         </dependency>
-        <dependency>
-            <groupId>net.sf.saxon</groupId>
-            <artifactId>Saxon-HE</artifactId>
-            <version>10.1</version>
-        </dependency>
 
     </dependencies>
 

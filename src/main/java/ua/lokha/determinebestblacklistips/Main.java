@@ -1,8 +1,6 @@
 package ua.lokha.determinebestblacklistips;
 
 import lombok.SneakyThrows;
-import net.sf.saxon.z.IntHashSet;
-import net.sf.saxon.z.IntRangeSet;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 
